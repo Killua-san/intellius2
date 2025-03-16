@@ -46,8 +46,4 @@ o	Alternatively, press the Enter key while the text area is focused.
 6.	Interpret Results: Carefully review the categorized results. Refer to Section 5 ("Result Categories") for detailed explanations of each category and suggested actions.
 7.	Cancel Search (If Needed): If you need to stop the search before it completes, click the "Cancel" button or press the Esc key.
 8.	Review Final Summary: Once all searches are complete, a summarized list of results categorized by type will be displayed at the end of the output area. The total search time will also be shown.
-5. Result Categories and Interpretation
-Understanding the result categories is crucial for effectively using this tool. Here's a breakdown of each category and how you might interpret them as a Trade Mark examiner:
-| Result Category | Description | Examiner Interpretation & Potential Action
-This is a comprehensive documentation for Trade Mark Examiners. Please let me know if you have any specific areas you'd like me to elaborate on or modify.
 
