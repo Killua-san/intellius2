@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>USPTO Search Checker</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: 20px auto; }
+        textarea { width: 100%; min-height: 100px; margin-bottom: 10px; font-size: 16px; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 4px; }
+        button:hover { background-color: #45a049; }
+        .results { margin-top: 20px; }
+        .result-item { margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .result-term { font-weight: bold; }
+        .no-match { color: #333; }
+        .full-match { color: green; }
+        .partial-match { color: orange; }
+        .larger-description { color: blue; }
+        .deleted-description { color: red; text-decoration: line-through; }
+        .error { color: red; font-weight: bold; }
+        .search-time { margin-top: 10px; font-style: italic; }
+        h2 { margin-top: 20px; }
+        ol { padding-left: 20px; }
+        li { margin-bottom: 5px; }
+        .final-results-container { margin-top: 30px; }
+        .final-results-section { margin-bottom: 20px; }
+        .final-results-section h2 { margin-bottom: 10px; }
+        .partial-prefix { color: #c0392b; font-weight: bold; }
+        .larger-description-final { color: #e67e22; }
+        .deleted-description-final { text-decoration: line-through; color: #777; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>USPTO Search Checker</h1>
+        <form method="post">
+            <label for="search_terms">Enter search terms (separated by semicolon):</label><br>
+            <textarea id="search_terms" name="search_terms" placeholder="Paste or type search terms here..." >{{ terms_input }}</textarea><br>
+            <button type="submit">Search</button>
+        </form>
+
+        {% if error_message %}
+            <div class="error">Error: {{ error_message }}</div>
+        {% endif %}
+
+        {% if search_time %}
+            <p class="search-time">Search time: {{ "%.2f"|format(search_time) }} seconds</p>
+        {% endif %}
+
+        {% if results %}
+        <div class="results">
+            <h2>Search Results</h2>
+            {% for term, status in results.items() %}
+                <div class="result-item">
+                    <span class="result-term">{{ term.capitalize() }}:</span>
+                    {% if status == "No match found" %}
+                        <span class="no-match">No match found</span>
+                    {% elif status.startswith("Full match found") %}
+                        <span class="full-match">{{ status }}</span>
+                    {% elif status.startswith("Full match not found, but partial match found") %}
+                        <span class="partial-match">{{ status }}</span>
+                    {% elif status.startswith("Apart of a larger description") %}
+                        <span class="larger-description">{{ status }}</span>
+                    {% elif status.startswith("Deleted description found") %}
+                        <span class="deleted-description">{{ status }}</span>
+                    {% elif status == "Error during search" %}
+                        <span class="error">Error during search</span>
+                    {% else %}
+                        <span>{{ status }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="final-results-container">
+            <h2>Categorized Results</h2>
+            {% set no_results = [] %}
+            {% set partial_results = [] %}
+            {% set full_matches = [] %}
+            {% set larger_description_results = [] %}
+            {% set deleted_descriptions_results = [] %}
+
+            {% for term, status in results.items() %}
+                {% if status == "No match found" %}
+                    {% set _ = no_results.append((term, status)) %}
+                {% elif status.startswith("Full match found") %}
+                    {% set _ = full_matches.append((term, status)) %}
+                {% elif status.startswith("Full match not found, but partial match found") %}
+                    {% set _ = partial_results.append((term, status)) %}
+                {% elif status.startswith("Apart of a larger description") %}
+                    {% set _ = larger_description_results.append((term, status)) %}
+                {% elif status.startswith("Deleted description found") %}
+                    {% set _ = deleted_descriptions_results.append((term, status)) %}
+                {% endif %}
+            {% endfor %}
+
+            {% if no_results %}
+                <div class="final-results-section">
+                    <h2>Not on the USPTO</h2>
+                    <ol>
+                    {% for term, _ in no_results %}
+                        <li><span class='result-term'>{{ term.capitalize() }}:</span> No match found</li>
+                    {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+
+            {% if partial_results %}
+                <div class="final-results-section">
+                    <h2>Partial Results</h2>
+                    <ol>
+                    {% for term, status in partial_results %}
+                        {% set m = status|regex_search("partial match found:\s*'(.+?)'\s*(\(Term ID: (.+?)\))?") %}
+                        {% set partial_text = m.group(1) if m else "" %}
+                        {% set term_id_partial = m.group(3) if m and m.group(3) else "Not found" %}
+                        <li><span class='result-term'>{{ term.capitalize() }}:</span> Partial match found for prefix: <span class='partial-prefix'>'{{ partial_text }}'</span> (Term ID: {{ term_id_partial }}). Consider checking broader term for relevance.</li>
+                    {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+
+            {% if larger_description_results %}
+                <div class="final-results-section">
+                    <h2>Apart of a Larger Description</h2>
+                    <ol>
+                    {% for term, status in larger_description_results %}
+                        {% set m = status|regex_search("Apart of a larger description \(Example - (.+?) - Term ID: (.+?)\)") %}
+                        {% set description_text = m.group(1) if m else "Description not found" %}
+                        {% set term_id_larger = m.group(2) if m else "Not found" %}
+                        <li><span class='result-term'>{{ term.capitalize() }}:</span> Apart of a larger description (Example - <span class='larger-description-final'>{{ description_text }}</span> - Term ID: {{ term_id_larger }})</li>
+                    {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+
+            {% if deleted_descriptions_results %}
+                <div class="final-results-section">
+                    <h2>Deleted Descriptions</h2>
+                    <ol>
+                    {% for term, status in deleted_descriptions_results %}
+                        {% set m = status|regex_search("Deleted description found \(Term ID: (.+?)\)") %}
+                        {% set term_id_deleted = m.group(1) if m else "Not found" %}
+                        <li><span class='result-term'>{{ term.capitalize() }}:</span> <span class='deleted-description-final'>{{ term }}</span> (Term ID: {{ term_id_deleted }})</li>
+                    {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+
+            {% if full_matches %}
+                <div class="final-results-section">
+                    <h2>Full Match Found</h2>
+                    <ol>
+                    {% for term, status in full_matches %}
+                        {% set m = status|regex_search("Full match found \(Term ID: (.+?)\)") %}
+                        {% set term_id_full = m.group(1) if m else "Not found" %}
+                        <li><span class='result-term'>{{ term.capitalize() }}:</span> Full match found (Term ID: {{ term_id_full }})</li>
+                    {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+        </div>
+
+        {% endif %}
+    </div>
+</body>
+</html>
