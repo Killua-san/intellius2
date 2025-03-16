@@ -1,6 +1,8 @@
 Documentation for USPTO Trademark Description Search Tool
 For Trade Mark Examiners
-This document provides guidance on using the USPTO Trademark Description Search Tool. This tool is designed to assist Trade Mark examiners in efficiently examining trademark applications by quickly searching for existing descriptions in the USPTO database. It automates the process of checking if a proposed description is already in use, potentially vague, or too broad. This is opposed to humans having to manually check applications which can have pages of descriptions.
+This document provides guidance on using the USPTO Trademark Description Search Tool. 
+
+This tool is designed to assist Trade Mark examiners in efficiently examining trademark applications by quickly searching for existing descriptions in the USPTO database. It automates the process of checking if a proposed description is already in use, potentially vague, or too broad. This is opposed to humans having to manually check applications which can have pages of descriptions.
 1. Overview
 The USPTO Trademark Description Search Tool is a web-based application that helps you streamline the process of examining trademark applications. By entering a trademark term or phrase, the tool automatically searches the USPTO's ID Manual database and provides categorized results to help you determine the acceptability of the proposed description.
 Key Benefits:
